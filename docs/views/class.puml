@@ -1,29 +1,52 @@
 @startuml
+    class User {
+        + id: int
+        + name: string
+        + email: string
+    }
+
     class Product {
         + id: int
         + name: string
-        + brand: string
+        + sku: string
         + price: float
     }
 
-    class ProductDAO {
-        + select_all(): Product[]
-        + insert(Product): int
-        + close(): void
+    class Stock {
+        + product_id: int
+        + quantity: int
     }
 
-    class ProductController {
-        + list_products():Product[]
-        + create_product(): void
+    class OrderItem {
+        + id: int
+        + order_id: int
+        + product_id: int
+        + quantity: int
+        + unit_price: float
     }
 
-    class api {
-        
+    class Order {
+        + id: int
+        + user_id: int
+        + total_amount: float
     }
 
-    ProductDAO --> Product
-    ProductController --> ProductDAO
-    api --> ProductController
-    ProductController --> Product
+    class OrderController {
+        - _get_or_create_user(user_id: int) : User
+        - _ensure_version_column() : void
+        + create_order_pessimistic(Order, items: list) : Order
+        + create_order_optimistic(Order, items: list, max_retries: int) : Order
+        + print_all_orders() : void
+        + print_stocks() : void
+    }
+
+    OrderController --> Order
+    OrderController --> OrderItem
+    OrderController --> User
+    OrderController --> Stock
+    OrderController --> Product
+    OrderItem --> Order
+    User <-- Order
+    Product <-- OrderItem
     
 @enduml

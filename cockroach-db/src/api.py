@@ -6,7 +6,7 @@ Auteurs : Gabriel C. Ullmann, Fabio Petrillo, 2025
 
 from flask import Flask, request, jsonify
 from db import get_sqlalchemy_session, get_engine, Base
-from write_order import create_order_pessimistic, create_order_optimistic
+from controllers.order_controller import create_order_pessimistic, create_order_optimistic
 from sqlalchemy import text
 
 app = Flask(__name__)

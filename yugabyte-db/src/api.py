@@ -7,7 +7,7 @@ Auteurs : Gabriel C. Ullmann, Fabio Petrillo, 2025
 import json
 from flask import Flask, request, jsonify
 from db import get_sqlalchemy_session, get_engine, Base
-from write_order import (
+from controllers.order_controller import (
     create_order_pessimistic,
     create_order_optimistic,
     _ensure_version_column,

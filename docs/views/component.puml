@@ -4,22 +4,21 @@ package View {
 }
 
 package Controller {
-    [ProductController] 
+    [order_controller.py] 
 }
 
-package DAO {
-    [ProductDAO] 
-}
-
-
-package Model {
+package Models {
+    [Order] 
+    [OrderItem] 
     [Product] 
+    [User] 
 }
 
-[api.py] --> [ProductController] : Demander la création d'un article
-[ProductController] --> [ProductDAO] : Créer une commande
-[ProductDAO] --> [ProductController] : Notifier le Controller
-[ProductController] --> [api.py] : Mettre à jour la View 
-[ProductDAO] --> [Product] : Créer un article
-[Product] --> [ProductDAO] : Notifier le model
+[api.py] --> [order_controller.py] 
+[order_controller.py] --> [Order] 
+[OrderItem] --> [Order] 
+[OrderItem] --> [Product] 
+[Order] --> [User] 
+
+
 @enduml

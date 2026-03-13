@@ -1,12 +1,28 @@
 @startuml
   node ConteneurMagasin {
-    component "store_manager.py" 
-    database "cassandra-1"
+    component "api.py" 
   }
 
-  node Conteneur2 {
-    database "cassandra-2"
+  node ConteneurBD1 {
+    database "bd-1"
   }
-  "store_manager.py" <--> "cassandra-1" : CassandraProtocol
-  "store_manager.py" <--> "cassandra-2" : CassandraProtocol
+
+  node ConteneurBD2 {
+    database "bd-2"
+  }
+
+  node ConteneurBD3 {
+    database "bd-3"
+  }
+
+  "api.py" <--> "bd-1" 
+  "api.py" <--> "bd-2" 
+  "api.py" <--> "bd-3" 
+
+  "bd-1" <--> "bd-2" 
+  "bd-2" <--> "bd-3" 
+
+  note as N1
+    BD peut désigner soit YugabyteDB, soit CockroachDB
+  end note
 @enduml

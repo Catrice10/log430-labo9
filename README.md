@@ -19,7 +19,7 @@ Dans ce labo, nous allons observer et comparer deux bases de données distribué
 2. Ensuite, nous allons répéter le test de charge avec CockroachDB (dans le répertoire `cockroach-db`)
 3. Finalement, nous allons comparer les deux tests de charge pour déterminer laquelle nous permettra de traiter plus de requêtes simultanées.
 
-Pour la simplicité, nous n'utiliserons pas l'application Store Manager au complet, mais nous repliquerons la même structure dans les bases de données. Suivez les étapes dans cette section pour préparer les 2 projets/répertoires.
+Afin de nous concentrer davantage sur le fonctionnement de la base de données, nous utiliserons une version simplifiée de l'application Store Manager. Suivez les étapes dans cette section pour préparer les 2 projets/répertoires.
 
 > 📝 **NOTE** : CockroachDB a récemment [changé](https://www.cockroachlabs.com/blog/enterprise-license-announcement/) à un modèle "source available", ce n'est plus open source. De plus, même si c'est gratuit pour l'utilisation personnelle et éducationnelle, CockroachDB n'est pas gratuit pour une utilisation commerciale.
 
@@ -50,7 +50,7 @@ Démarrez premièrement le projet dans le répertoire `yugabyte-db`. Suivez les 
 
 ## 🧪 Activités pratiques
 
-L'architecture de ce laboratoire repose sur un cluster à trois nœuds. Dans le cas de YugabyteDB, les conteneurs s'appelent `yugabyte1`, `yugabyte2`, `yugabyte3`. Contrairement à une base de données classique centralisée, YugabyteDB distribue automatiquement les données et les transactions entre les nœuds. Cependant, il utilise encore le paradigme relationnel, donc il nous permet de créer des tables, des colonnes, et d'utiliser le langage SQL pour consulter la base de données.
+L'architecture de ce laboratoire repose sur un cluster (grappe) à trois nœuds. Dans le cas de YugabyteDB, les conteneurs s'appelent `yugabyte1`, `yugabyte2`, `yugabyte3`. Contrairement à une base de données classique centralisée, YugabyteDB distribue automatiquement les données et les transactions entre les nœuds. Cependant, il utilise encore le paradigme relationnel, donc il nous permet de créer des tables, des colonnes, et d'utiliser le langage SQL pour consulter la base de données.
 
 > 📝 **NOTE** : Dans une vraie application en environnement de production, les nœuds d'un cluster seraient déployés sur des serveurs physiques distincts. Par simplicité, dans ce labo, les trois nœuds tournent tous dans des conteneurs Docker sur la même machine.
 
@@ -94,7 +94,7 @@ Dans ce laboratoire, nous étudierons deux approches pour éviter ce type de pro
 
 - **Verrouillage pessimiste** : La transaction acquiert un verrou au niveau de la ligne dès la lecture (`SELECT … FOR UPDATE`). Toute autre transaction qui tente de toucher la même ligne dans la table `stocks` sera **bloquée** jusqu'à ce que la première transaction soit terminée (commit ou rollback). Cette approche garantit qu'aucun conflit ne peut survenir, au prix d'une latence plus élevée en cas de forte contention.
 
-Lisez le code dans `src/write_order.py` pour voir comment les deux approches sont implémentées dans ce projet. Pour comparer les deux approches en conditions réelles, exécutez le test de concurrence suivant via l'onglet **Exec** de Docker Desktop :
+Lisez le code dans `src/controllers/order_controller.py` pour voir comment les deux approches sont implémentées dans ce projet. Pour comparer les deux approches en conditions réelles, exécutez le test de concurrence suivant via l'onglet **Exec** de Docker Desktop :
 
 ```bash
 python tests/concurrency_test.py --threads 20 --product 3
