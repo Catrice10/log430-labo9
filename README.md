@@ -12,16 +12,16 @@
 - Vérifier la **résilience** lors d'une panne de nœud
 
 ## ⚙️ Setup
-L'application Store Manager a évolué d'un monolithe vers une architecture microservices event-driven. Pour le Labo 09, nous franchissons une étape cruciale : la migration vers une architecture entièrement distribuée, pas seulement dans les services mais egalement dans le base de données. Cette évolution prépare l'application pour un déploiement cloud à grande échelle.
+L'application Store Manager a évolué d'un monolithe vers une architecture microservices event-driven. Pour le Labo 09, nous franchissons une étape cruciale : la migration vers une architecture entièrement distribuée, pas seulement dans les services mais également dans la base de données. Cette évolution prépare l'application pour un déploiement cloud à grande échelle.
 
-Dans ce labo, nous allons observer et comparer deux bases de donées distribuées gratuites et open source : YugabyteDB et CockroachDB. 
-1. Tout d'abord, nous experimenterons avec des differents approaches de verrou distribué avec YugabyteDB (dans le répertoire `yugabyte-db`), et nous terminerons avec un test de charge. 
-2. Ensuite, nous allons repeter le test de charge avec CockroachDB (dans le répertoire `cockroach-db`)
-3. Finalement, nous allons comparer les deux test de charge pour determiner laquelle nous permettre de traiter plus de requisitions simulatenés.
+Dans ce labo, nous allons observer et comparer deux bases de données distribuées gratuites et open source : YugabyteDB et CockroachDB. 
+1. Tout d'abord, nous expérimenterons avec différentes approches de verrou distribué avec YugabyteDB (dans le répertoire `yugabyte-db`), et nous terminerons avec un test de charge. 
+2. Ensuite, nous allons répéter le test de charge avec CockroachDB (dans le répertoire `cockroach-db`)
+3. Finalement, nous allons comparer les deux tests de charge pour déterminer laquelle nous permettra de traiter plus de requêtes simultanées.
 
-Pour simplicité, nous n'utiliserons pas l'application Store Manager au complet, mais nous repliquerons la même structure dans les bases de donnés. Suivez les étapes dans cette section pour preparer les 2 projets/répertoires.
+Pour la simplicité, nous n'utiliserons pas l'application Store Manager au complet, mais nous repliquerons la même structure dans les bases de données. Suivez les étapes dans cette section pour préparer les 2 projets/répertoires.
 
-> 📝 **NOTE** : CockroachDB a recemment [changé](https://www.cockroachlabs.com/blog/enterprise-license-announcement/) à un modèle "source available", ce ne pas plus open source. De plus, même si c'est gratuit pour l'utilisation personelle et educationelle, CockroachDB n'est pas gratuit pour utiliser commerciellement.
+> 📝 **NOTE** : CockroachDB a récemment [changé](https://www.cockroachlabs.com/blog/enterprise-license-announcement/) à un modèle "source available", ce n'est plus open source. De plus, même si c'est gratuit pour l'utilisation personnelle et éducationnelle, CockroachDB n'est pas gratuit pour une utilisation commerciale.
 
 ### 1. Clonez le dépôt
 
@@ -44,13 +44,13 @@ docker network create labo09-network
 
 ### 4. Préparez l'environnement de développement
 
-Démarrez premierement le projet dans le repertoire `yugabyte-db`. Suivez les mêmes étapes que pour les derniers laboratoires.
+Démarrez premièrement le projet dans le répertoire `yugabyte-db`. Suivez les mêmes étapes que pour les derniers laboratoires.
 
 > ⚠️ **ATTENTION** : Le conteneur `db-init` démarrera, initialisera la base de données, puis s'arrêtera automatiquement. Si vous remarquez qu'il est arrêté, c'est tout à fait normal.
 
 ## 🧪 Activités pratiques
 
-L'architecture de ce laboratoire repose sur un cluster à trois nœuds. Dans le cas de YugabyteDB, les contenuers s'appelent `yugabyte1`, `yugabyte2`, `yugabyte3`. Contrairement à une base de données classique centralisée, YugabyteDB distribue automatiquement les données et les transactions entre les nœuds. Cependant, il utilise encore le paradigme relationnel, alors il nous permet de créer des tables, des colonnes, et d'utiliser la langage SQL pour consulter la base de données.
+L'architecture de ce laboratoire repose sur un cluster à trois nœuds. Dans le cas de YugabyteDB, les conteneurs s'appelent `yugabyte1`, `yugabyte2`, `yugabyte3`. Contrairement à une base de données classique centralisée, YugabyteDB distribue automatiquement les données et les transactions entre les nœuds. Cependant, il utilise encore le paradigme relationnel, donc il nous permet de créer des tables, des colonnes, et d'utiliser le langage SQL pour consulter la base de données.
 
 > 📝 **NOTE** : Dans une vraie application en environnement de production, les nœuds d'un cluster seraient déployés sur des serveurs physiques distincts. Par simplicité, dans ce labo, les trois nœuds tournent tous dans des conteneurs Docker sur la même machine.
 
@@ -76,7 +76,7 @@ Exécutez le test de concurrence suivant via l'onglet **Exec** de Docker Desktop
 python tests/concurrency_test.py --threads 5 --product 3
 ```
 
-Répetez la vérification. Vous devriez maintenant voir de nouveaux enregistrements :
+Répétez la vérification. Vous devriez maintenant voir de nouveaux enregistrements :
 
 ```sh
 ysqlsh -h yugabyte1 -U yugabyte -c "SELECT * FROM orders;"
@@ -84,7 +84,7 @@ ysqlsh -h yugabyte1 -U yugabyte -c "SELECT * FROM orders;"
 
 > 💡 **Question 1** : Quelle est la sortie du terminal que vous obtenez? Si vous répétez cette commande sur `yugabyte2` et `yugabyte3`, est-ce que la sortie est identique? Illustrez votre réponse avec des captures d'écran du terminal.
 
-### 2. Comparez la verrouillage pessimiste vs. optimiste
+### 2. Comparez le verrouillage pessimiste vs. optimiste
 
 Dans un contexte de base de données distribuée, plusieurs instances de la base de données peuvent tenter de modifier les mêmes lignes au même moment. Sans mécanisme de contrôle, cela peut mener à des **conditions de course** (*race conditions*) : par exemple, deux transactions lisent un stock de 1 unité, toutes les deux décident de le décrémenter, et on se retrouve avec un stock négatif.
 
@@ -102,7 +102,7 @@ python tests/concurrency_test.py --threads 20 --product 3
 
 L'article avec l'ID 3 a un stock initial de 2 unités. Avec 20 threads tentant simultanément de passer une commande d'une unité, seules 2 commandes devraient être acceptées. Si le système en accepte davantage, cela indique que le verrou ne fonctionne pas correctement.
 
-Après l'exécution du test, vérifiez le stock final depuis votre machine hôte. Après le test, le stock de l'article ID 3 devrait être zero :
+Après l'exécution du test, vérifiez le stock final depuis votre machine hôte. Après le test, le stock de l'article ID 3 devrait être zéro :
 
 ```bash
 curl http://localhost:5000/stocks
@@ -110,7 +110,7 @@ curl http://localhost:5000/stocks
 
 > 💡 **Question 2** : Observez la latence moyenne des deux approches affichée dans la sortie du test. Laquelle a la latence la plus élevée et pourquoi? Illustrez votre réponse avec les sorties du terminal.
 
-> 💡 **Question 3** : Répétez le test avec 5 threads au lieu de 20. Qui a actuellement la latence moyenne la plus élevée et pourquoi? Illustrez votre réponse avec les sorties du terminal.
+> 💡 **Question 3** : Répétez le test avec 5 threads au lieu de 20. Quelle approche a actuellement la latence moyenne la plus élevée et pourquoi? Illustrez votre réponse avec les sorties du terminal.
 
 ### 3. Testez la charge sur YugabyteDB avec Locust
 
@@ -129,7 +129,7 @@ Pour exécuter le test, accédez à http://localhost:8089 et appliquez les param
 
 Lancez le test et observez les statistiques (onglet `Statistics`) et graphiques (onglet `Charts`) dans Locust. Enregistrez le contenu du tableau `Statistics`, nous l'utiliserons plus tard pour comparer le test suivant (par exemple, vous pouvez copier-coller le tableau dans Excel/Google Sheets ou dans un fichier texte).
 
-> 💡 **Question 4** : en utilisant YugabyteDB, quelle stratégie de verrouillage affiche la plus baisse taux d'erreurs et la plus haute latence? Illustrez votre réponse avec des captures d'écran ou statistiques de l'interface Locust.
+> 💡 **Question 4** : En utilisant YugabyteDB, quelle stratégie de verrouillage affiche le plus bas taux d'erreurs et la plus baisse latence? Illustrez votre réponse avec des captures d'écran ou statistiques de l'interface Locust.
 
 ### 4. Observez la résilience du cluster YugabyteDB et la cohérence des données
 
@@ -154,13 +154,13 @@ docker start yugabyte2
 > 💡 **Question 5** : Est-ce que le taux d'erreur a augmenté lors de l'arrêt du nœud? Combien de temps a duré le basculement? Illustrez votre réponse avec des captures d'écran des graphiques sur Locust.
 
 ### 5. Testez la charge sur CockroachDB avec Locust
-Démarrez le projet le repertoire `cockroach-db`. Assurez vous que les étapes de setup ont été exécutés avant la démarrage. Pour economizer les ressources, vous pouvez arreter vos conteneurs YugabyteDB.
+Démarrez le projet dans le répertoire `cockroach-db`. Assurez-vous que les étapes de setup ont été exécutées avant le démarrage. Vous devriez voir les conteneurs `cockroach1`, `cockroach2` et `cockroach3` dans la liste. Si vous voulez, vous pouvez arrêter vos conteneurs YugabyteDB pour économiser les ressources.
 
-Ensuite, répetez le test de charge avec les mêmes paramèteres de l'activité 3. Lancez le test et observez les statistiques et graphiques. Enregistrez le contenu du tableau `Statistics` et comparez avec les résultats l'activité 3.
+Ensuite, répétez le test de charge sur CockroachDB avec les mêmes paramètres de l'activité 3. Lancez le test et observez les statistiques et graphiques. Enregistrez le contenu du tableau `Statistics` et comparez avec les résultats de l'activité 3.
 
-> 💡 **Question 6** : En utilisant CockroachDB, quelle stratégie de verrouillage affiche la plus baisse taux d'erreurs et la plus haute latence? Illustrez votre réponse avec des captures d'écran ou statistiques de l'interface Locust.
+> 💡 **Question 6** : En utilisant CockroachDB, quelle stratégie de verrouillage affiche le plus bas taux d'erreurs et la plus baisse latence? Illustrez votre réponse avec des captures d'écran ou statistiques de l'interface Locust.
 
-> 💡 **Question 7** : Quelle base de données affiche la plus baisse taux d'erreurs et la plus haute latence? Est-ce que c'est YugabyteDB ou CockroachDB? Illustrez votre réponse avec des captures d'écran ou statistiques de l'interface Locust.
+> 💡 **Question 7** : Quelle base de données affiche le plus bas taux d'erreurs et la plus baisse latence? Est-ce que c'est YugabyteDB ou CockroachDB? Illustrez votre réponse avec des captures d'écran ou statistiques de l'interface Locust.
 
 ## 📦 Livrables
 
