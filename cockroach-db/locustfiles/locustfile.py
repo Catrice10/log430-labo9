@@ -1,9 +1,7 @@
 """
-locustfile.py – Load test for the Order API (CockroachDB edition).
-
-Run via docker-compose (Locust UI at http://localhost:8089) or headlessly:
-
-  locust -f locustfile.py --headless -u 50 -r 10 --run-time 60s --host http://localhost:5000
+Locustfile - CockroachDB
+SPDX-License-Identifier: LGPL-3.0-or-later
+Auteurs : Gabriel C. Ullmann, Fabio Petrillo, 2025
 """
 
 import random

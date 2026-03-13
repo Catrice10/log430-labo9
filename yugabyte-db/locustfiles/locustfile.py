@@ -1,15 +1,7 @@
 """
-locustfile.py – Load test for the Order API.
-
-Run via docker-compose (Locust UI at http://localhost:8089) or headlessly:
-
-  locust -f locustfile.py --headless -u 50 -r 10 --run-time 60s --host http://localhost:5000
-
-Two TaskSets:
-  - PessimisticOrderUser  : hammers POST /orders/pessimistic
-  - OptimisticOrderUser   : hammers POST /orders/optimistic
-
-Both pick a random user (1-3) and a random product (1-4) with qty 1.
+Locustfile - YugabyteDB
+SPDX-License-Identifier: LGPL-3.0-or-later
+Auteurs : Gabriel C. Ullmann, Fabio Petrillo, 2025
 """
 
 import random
