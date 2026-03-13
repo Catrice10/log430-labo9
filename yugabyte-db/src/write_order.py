@@ -14,7 +14,11 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from logger import Logger
-from models.order import Order, OrderItem, Stock, Product, User
+from models.order import Order
+from models.order_item import OrderItem
+from models.stock import Stock
+from models.user import User
+from models.product import Product
 
 logger = Logger.get_instance("write_order")
 

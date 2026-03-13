@@ -12,7 +12,7 @@
 - Vérifier la **résilience** lors d'une panne de nœud
 
 ## ⚙️ Setup
-L'application Store Manager a évolué d'un monolithe vers une architecture microservices event-driven. Pour le Labo 09, nous franchissons une étape cruciale : la migration vers une architecture entièrement distribuée, pas seulement dans les services mais également dans la base de données. Cette évolution prépare l'application pour un déploiement cloud à grande échelle.
+L'application Store Manager a évolué d'un monolithe vers une architecture microservices event-driven. Pour le Labo 09, nous franchissons une étape cruciale : la migration vers une architecture entièrement distribuée, pas seulement dans les services mais également dans la base de données. Cette évolution prépare l'application pour un déploiement nuage à grande échelle.
 
 Dans ce labo, nous allons observer et comparer deux bases de données distribuées gratuites et open source : YugabyteDB et CockroachDB. 
 1. Tout d'abord, nous expérimenterons avec différentes approches de verrou distribué avec YugabyteDB (dans le répertoire `yugabyte-db`), et nous terminerons avec un test de charge. 
