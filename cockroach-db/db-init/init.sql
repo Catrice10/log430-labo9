@@ -1,5 +1,4 @@
--- db-init/init.sql
--- Initialization script for CockroachDB
+-- Initialization script for Store Manager with CockroachDB
 
 CREATE DATABASE IF NOT EXISTS labo09;
 USE labo09;

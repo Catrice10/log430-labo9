@@ -1,5 +1,4 @@
--- db-init/init.sql
--- Initialization script for YugabyteDB
+-- Initialization script for Store Manager with YugabyteDB
 
 -- Users table
 DROP TABLE IF EXISTS order_items CASCADE;
