@@ -108,7 +108,7 @@ Après l'exécution du test, vérifiez le stock final depuis votre machine hôte
 curl http://localhost:5000/stocks
 ```
 
-> 💡 **Question 2** : Observez la latence moyenne des deux approches affichée dans la sortie du test. Laquelle a la latence la plus élevée et pourquoi? Illustrez votre réponse avec les sorties du terminal.
+> 💡 **Question 2** : Observez la latence moyenne des deux approches affichée dans la sortie du test. Laquelle a la latence moyenne la plus élevée et pourquoi? Illustrez votre réponse avec les sorties du terminal.
 
 > 💡 **Question 3** : Répétez le test avec 5 threads au lieu de 20. Quelle approche a actuellement la latence moyenne la plus élevée et pourquoi? Illustrez votre réponse avec les sorties du terminal.
 
@@ -129,7 +129,7 @@ Pour exécuter le test, accédez à http://localhost:8089 et appliquez les param
 
 Lancez le test et observez les statistiques (onglet `Statistics`) et graphiques (onglet `Charts`) dans Locust. Enregistrez le contenu du tableau `Statistics`, nous l'utiliserons plus tard pour comparer le test suivant (par exemple, vous pouvez copier-coller le tableau dans Excel/Google Sheets ou dans un fichier texte).
 
-> 💡 **Question 4** : En utilisant YugabyteDB, quelle stratégie de verrouillage affiche le plus bas taux d'erreurs et la plus baisse latence? Illustrez votre réponse avec des captures d'écran ou statistiques de l'interface Locust.
+> 💡 **Question 4** : En utilisant YugabyteDB, quelle stratégie de verrouillage affiche le plus bas taux d'erreurs et la plus baisse latence moyenne? Illustrez votre réponse avec des captures d'écran ou statistiques de l'interface Locust.
 
 ### 4. Observez la résilience du cluster YugabyteDB et la cohérence des données
 
