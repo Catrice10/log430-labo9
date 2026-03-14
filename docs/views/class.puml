@@ -48,5 +48,4 @@
     OrderItem --> Order
     User <-- Order
     Product <-- OrderItem
-    
 @enduml

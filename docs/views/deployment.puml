@@ -15,12 +15,12 @@
     database "bd-3"
   }
 
-  "api.py" <--> "bd-1" 
-  "api.py" <--> "bd-2" 
-  "api.py" <--> "bd-3" 
+  "api.py" <--> "bd-1" : TCP
+  "api.py" <--> "bd-2" : TCP
+  "api.py" <--> "bd-3" : TCP
 
-  "bd-1" <--> "bd-2" 
-  "bd-2" <--> "bd-3" 
+  "bd-1" <--> "bd-2" : RPC
+  "bd-2" <--> "bd-3" : RPC
 
   note as N1
     BD peut désigner soit YugabyteDB, soit CockroachDB

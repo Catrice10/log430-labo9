@@ -1,131 +1,210 @@
 # Store Manager L09 - Documentation d'Architecture
-Ce document, basé sur le modèle arc42, décrit l'API REST de gestion de magasin avec base de données distribuée Apache Cassandra pour le Labo 09, LOG430.
+Ce document, basé sur le modèle arc42, décrit une API REST de gestion de magasin avec une base de données distribuée pour le Labo 09, LOG430.
 
 ## 1. Introduction et Objectifs
 
 ### Panorama des exigences
-L'application « Store Manager » a évolué d'un monolithe vers une architecture microservices event-driven. Pour le Labo 09, nous franchissons une étape cruciale : la migration vers une architecture entièrement distribuée avec Apache Cassandra comme base de données distribuée. Cette évolution prépare l'application pour un déploiement cloud à grande échelle.
+L'application « Store Manager » est un système à architecture microservices pour la gestion des utilisateurs, des articles, des commandes et du stock dans un petit magasin. Elle sert de projet éducatif pour démontrer :
+- L'implémentation d'une architecture API REST avec Flask
+- L'intégration GraphQL pour des requêtes de données flexibles
+- La fonctionnalité de gestion de stock avec cache Redis
+- La persistance distribuée avec une base de données (YugabyteDB/CockroachDB)
+- La comparaison des approches REST vs GraphQL
+- L'optimisation des jointures SQL avec SQLAlchemy
+- L'utilisation d'un API Gateway (KrakenD) pour le contrôle de timeout et rate limiting
+- L'utilisation d'un broker Kafka pour la communication asynchrone avec des microservices
+- La transition vers une architecture microservices avec séparation des responsabilités
+- L'implémentation de Sagas chorégraphiées pour la coordination distribuée des opérations
+- L'application du patron CQRS (Command Query Responsibility Segregation)
+- L'utilisation du patron Outbox pour assurer la tolérance aux pannes en architecture event-driven
 
-L'application démontre :
-- L'implémentation d'une API REST avec Flask et base de données distribuée
-- L'utilisation d'Apache Cassandra pour la persistance distribuée
-- La réplication automatique des données à travers un cluster multi-nœuds
-- La gestion de la cohérence et de la disponibilité dans un système distribué
-- Les concepts de keyspace, facteur de réplication et distribution de données
+Nous avons développé ce projet tout au long du cours LOG430, et le Lab 09 marque l'aboutissement de ce processus. Le projet est passé d'une architecture monolithique à une architecture de microservices intégrant des sagas chorégraphiées et une persistance distribuée. Il est toutefois important de garder à l'esprit que l'évolution architecturale est un processus sans fin et qu'elle peut se poursuivre tant que l'application existe.
 
 ### Objectifs qualité
 | Priorité | Objectif qualité | Scénario |
 |----------|------------------|----------|
-| 1 | **Haute disponibilité** | Le système continue de fonctionner même si un ou plusieurs nœuds Cassandra tombent en panne |
-| 2 | **Scalabilité horizontale** | Ajout de nouveaux nœuds Cassandra sans interruption de service |
-| 3 | **Résilience** | Les données sont répliquées automatiquement selon le facteur de réplication configuré |
-| 4 | **Distribution native** | Élimination de la synchronisation manuelle entre bases de données |
-| 5 | **Maintenabilité** | Séparation claire des responsabilités via les patrons MVC et DAO |
+| 1 | **Extensibilité** | Ajout facile de nouveaux endpoints API et clients grâce aux principes REST |
+| 2 | **Flexibilité** | Le support GraphQL permet aux clients de requêter exactement les données nécessaires |
+| 3 | **Performance** | Cache Redis pour les données de stock et optimisation des jointures SQL |
+| 4 | **Maintenabilité** | Séparation claire des responsabilités via les patrons MVC+CQRS et l’architecture microservices |
+| 5 | **Fiabilité** | Rate limiting et timeout via KrakenD pour protéger les services backend ; Saga chorégraphiée avec Outbox Pattern pour garantir la cohérence des transactions distribuées |
+| 6 | **Scalabilité** | Architecture microservices permet la mise à l'échelle indépendante des services ; Kafka permet une communication asynchrone découplée ; base de données distribuée permet la mise à l'échelle horizontale |
+| 7 | **Tolérance aux pannes** | Patron Outbox et architecture event-driven permettent la récupération des opérations après redémarrage des services ; réplication automatique en base de données distribuée |
+| 8 | **Haute disponibilité** | Cluster (grappe) distribué sans point de défaillance unique ; continuité de service en cas de panne de nœud |
 
 ### Parties prenantes (Stakeholders)
-- **Développeur·euses** : Apprendre l'architecture de bases de données distribuées et les principes de Cassandra
-- **Employé·es du magasin** : Utilisatrices et utilisateurs gérant les articles, commandes et stock via l'API
-- **Client·es du magasin** : Utilisatrices et utilisateurs finales servis par l'application (indirectement via les interactions avec les employé·es)
+- **Développeuses et développeurs** : Apprendre/enseigner l'architecture API REST, GraphQL, microservices et les patrons de services web modernes
+- **Employé·es du magasin** : Utilisateur·trices gérant les articles, commandes et stock via l'API
+- **Client·es du magasin** : Utilisateur·trices finales servis par l'application (indirectement via les interactions avec les employé·es)
+- **Fournisseurs** : Partenaires externes utilisant l'endpoint GraphQL pour vérifier l'état du stock et envoyer des données de réapprovisionnement
 
 ## 2. Contraintes d'architecture
 
 | Contrainte | Description |
 |------------|-------------|
-| **Technologie** | Utilisation de Python 3.11, Flask, Apache Cassandra 4.1 et Docker |
-| **Base de données** | Apache Cassandra avec architecture sans point de défaillance unique |
-| **Déploiement** | Déploiement en conteneurs Docker avec cluster Cassandra multi-nœuds |
-| **Réplication** | Facteur de réplication configurable (minimum 1 pour dev, 2-3 pour production) |
-| **Éducatif** | L'application doit clairement démontrer les principes des bases de données distribuées et la réplication de données |
-| **Configuration** | Utilisation de variables d'environnement pour toutes les configurations sensibles |
+| **Technologie** | Utilisation de Python 3, Flask, bases de données distribuée (YugabyteDB/CockroachDB), Redis, KrakenD, Kafka et Docker |
+| **Déploiement** | Déploiement en conteneurs Docker avec cluster de base de données distribuée (3 nœuds) et communication réseau entre services via un réseau Docker partagé |
+| **Base de données distribuée** | Cluster multi-nœuds sans point de défaillance unique ; réplication automatique et consensus distribué |
+| **Communication** | Communication asynchrone entre microservices via Kafka comme event broker ; communication synchrone uniquement via Outbox Pattern pour les opérations critiques |
+| **Éducatif** | L'application doit clairement démontrer les principes REST vs GraphQL, la gestion de stock, les microservices, les Sagas chorégraphiées, CQRS et les bonnes pratiques API |
+| **Conception API** | Doit suivre les principes RESTful et fournir une alternative GraphQL pour les requêtes flexibles |
+| **API Gateway** | KrakenD comme point d'entrée unique pour tous les appels API avec contrôle de rate limiting et timeout |
+| **Tolérance aux pannes** | Patron Outbox pour assurer la cohérence des transactions dans une architecture event-driven distribuée |
 
 ## 3. Portée et contexte du système
 
 ### Contexte métier
 ![Activity](activity.png)
 
-Le système permet la gestion de produits dans un environnement distribué :
-- Créer des produits avec persistance distribuée automatique
-- Consulter tous les produits avec lecture depuis n'importe quel nœud du cluster
-- Garantir la disponibilité des données même en cas de défaillance de nœuds
-- Supporter une scalabilité horizontale pour augmenter la capacité
+Le système permet aux employé·es du magasin de :
+- Gérer les comptes utilisateurs (employé·es et clientes)
+- Gérer les articles vendus par le magasin
+- Traiter les commandes des clientes
+- Suivre et gérer les niveaux de stock des articles
+- Générer des rapports de stock
+- Permettre aux fournisseurs de consulter l'état du stock via GraphQL
 
 ### Contexte technique
-- **Applications clientes** : Postman, applications web/mobiles, services externes
-- **Couche API** : API REST Flask avec endpoints CRUD
-- **Couche base de données** : Cluster Apache Cassandra (1 à 3 nœuds)
-- **Communication** : Requêtes HTTP/HTTPS entre clients et API, CQL (Cassandra Query Language) entre API et Cassandra
+- **Applications clientes** : Postman, applications fournisseurs, potentiels frontends web/mobiles
+- **Couche API** : API REST Flask avec endpoint GraphQL
+- **Couche base de données** : Cluster distribué (3 nœuds) remplaçant MySQL ; cache Redis
+- **API Gateway** : KrakenD pour le routage, rate limiting et timeout
+- **Communication**: Requêtes HTTP/HTTPS entre clients, gateway et microservices
 
 ## 4. Stratégie de solution
 
 | Problème | Approche de solution |
 |----------|---------------------|
-| **Distribution des données** | Cassandra distribue automatiquement les données à travers le cluster selon une stratégie de partitionnement par hachage |
-| **Haute disponibilité** | Architecture sans point de défaillance unique avec réplication configurable (replication_factor) |
-| **Cohérence des données** | Synchronisation automatique entre nœuds gérée par Cassandra |
-| **Scalabilité** | Ajout de nœuds sans interruption de service grâce à l'architecture peer-to-peer |
-| **Résilience** | Données répliquées sur plusieurs nœuds permettant la continuité même en cas de panne |
-| **Configuration** | Variables d'environnement (.env) pour toutes les informations de connexion |
+| **Standardisation API** | Principes REST avec méthodes HTTP et nommage de ressources appropriés |
+| **Requêtes de données flexibles** | Endpoint GraphQL pour les clients nécessitant des champs de données spécifiques |
+| **Gestion de stock** | Mises à jour automatiques du stock lors de création/suppression de commandes |
+| **Performance** | Cache Redis pour les données de stock fréquemment accédées |
+| **Support multi-BD** | Cluster distribué pour la persistance ; Redis pour le cache des rapports |
+| **Protection des services** | KrakenD API Gateway pour rate limiting et timeout |
+| **Séparation des responsabilités** | Microservice dédié pour la gestion des commandes ; Kafka comme event broker |
+| **Scalabilité** | Architecture microservices permettant la mise à l'échelle indépendante |
+| **Coordination distribuée** | Saga chorégraphiée : chaque service réagit aux événements Kafka sans orchestrateur central |
+| **Tolérance aux pannes** | Patron Outbox pour persister les événements avant envoi à Kafka ; OutboxProcessor pour relancer les opérations après redémarrage |
+| **Cohérence transactionnelle** | CQRS pour séparer les opérations d'écriture (Commands) des opérations de lecture (Queries) |
 
 ## 5. Vue des blocs de construction
 ![Class](class.png)
 ![Component](component.png)
 
+### Composants clés:
+Dans le labo 9 nous utilisons une version simplifiée du Store Manager qui comporte donc moins de fonctionnalités clés. Cependant, ces mêmes fonctionnalités seraient disponibles dans la version complète.
+- **Contrôleurs API** : Gèrent les requêtes et réponses HTTP
+- **Couche logique métier** : Traitement des commandes, gestion de stock
+- **Models avec SQLAlchemy** : Abstraction de l'accès aux bases de données
+
 ## 6. Vue d'exécution
 ![Use Case](use_case.png)
+
+Dans le labo 9 nous utilisons une version simplifiée du Store Manager qui comporte donc moins de fonctionnalités clés. Cependant, ces mêmes fonctionnalités seraient disponibles dans la version complète.
+- **Traitement des commandes** : Traitement des commandes, gestion de stock
+- **Consensus** : les noeuds des  bases de données distribué parlent entre eux pour decider qui va faire des changements des donnés. C'est necessaire pour eviter des incoherences.
+- **Récupération après panne** : les noeuds actifs des bases de données distribué dans le cluster peuvent assumer des responsabilités des noeuds inactifs s'il y a besoin.
 
 ## 7. Vue de déploiement
 ![Deployment](deployment.png)
 
-## 8. Concepts transversaux
+### Architecture conteneurs :
+- **Conteneur API et bases de données** : Application Flask, bases de données YugabyteDB/CockroachDB, Redis.
+- **Conteneur Payment Service** : API Flask dédiée aux [paiements](https://github.com/guteacher/log430-a25-labo5-payment)
+- **KrakenD** : API Gateway
+- **Réseau Docker** : Permet la communication entre conteneurs
 
-### Principes de base de données distribuées
-- **Partitionnement** : Distribution automatique des données par hachage de la clé primaire
-- **Réplication** : Copie des données sur plusieurs nœuds selon le facteur de réplication
-- **Cohérence éventuelle** : Les données convergent vers un état cohérent à travers le cluster
+
+## 8. Concepts transversaux
+- **Principes REST** : Client-serveur, sans état, interface uniforme, système en couches
+- **GraphQL** : Langage de requête pour la récupération flexible de données
+- **Architecture Event-Driven** : Microservices communiquent via des événements asynchrones à travers Kafka
+- **Saga Chorégraphiée** : Coordination distribuée sans orchestrateur central ; chaque service réagit aux événements et déclenche les événements suivants
+- **CQRS (Command Query Responsibility Segregation)** : Séparation des opérations d'écriture (Commands) et de lecture (Queries)
+- **Outbox Pattern** : Garantit la durabilité des événements en les stockant dans une table locale avant envoi à Kafka
+- **Base de données distribuée** : Cluster sans point de défaillance unique ; réplication automatique et consensus distribué
+- **Stratégie de cache** : Redis pour l'optimisation de la lecture des données de stock
+- **Patrons de base de données** : ORM avec SQLAlchemy, gestion de sessions
+- **Communication conteneurs** : Réseaux Docker pour la découverte de services
+- **API Gateway Pattern** : Point d'entrée unique avec KrakenD
+- **Microservices Pattern** : Séparation des responsabilités par domaine métier
+- **Rate Limiting** : Protection contre les abus et surcharge
+- **Circuit Breaker** : Timeout control pour éviter les blocages
 
 ## 9. Décisions d'architecture
-Veuillez consulter le fichier `/docs/adr/adr001.md` pour la décision d'utiliser Apache Cassandra.
+Veuillez consulter le fichier `/docs/adr/adr001.md`.
 
 ## 10. Exigences qualité
 
-### Haute disponibilité
-- Aucun point de défaillance unique
-- Réplication configurable (RF=1 à 3)
-- Lectures/écritures possibles même avec nœuds défaillants
+### Extensibilité
+- Ajout facile de nouveaux endpoints REST suivant les patrons établis
+- Le schéma GraphQL peut être étendu pour de nouvelles exigences de données
+- Nouveaux event handlers peuvent être enregistrés dans HandlerRegistry sans modification du code existant
 
-### Scalabilité horizontale
-- Ajout de nœuds sans interruption de service
-- Distribution automatique des données sur nouveaux nœuds
-- Performance linéaire avec l'ajout de nœuds
-
-### Résilience
-- Données répliquées selon le facteur de réplication
-- Auto-réparation du cluster en cas de panne temporaire
-- Hinted handoff pour les nœuds temporairement indisponibles
-
-### Maintenabilité
-- Séparation claire : Controller → Model → DAO
-- Configuration externalisée dans .env
-- Logs structurés pour le debugging
-- Tests unitaires avec mocks pour isolation
+### Flexibilité
+- GraphQL permet aux clients de demander exactement les données dont ils ont besoin
+- Support pour plusieurs backends de base de données (cluster distribué, Redis)
+- Architecture microservices permet des changements indépendants
+- Nouveaux événements peuvent être ajoutés à la saga sans modification de l'orchestration
 
 ### Performance
-- Prepared statements pour optimisation des requêtes
-- Distribution de charge de lecture à travers les nœuds
-- Écriture parallèle sur plusieurs répliques
+- Cache Redis pour les données de stock réduit la charge de base de données
+- Optimisation des jointures SQL pour les requêtes complexes
+- Communication asynchrone via Kafka réduit le couplage entre services
+
+### Maintenabilité
+- Séparation claire des préoccupations avec les patrons MVC+CQRS
+- Conventions de nommage cohérentes à travers toutes les couches
+- Conteneurisation Docker pour des environnements cohérents
+- Microservices permettent des déploiements indépendants
+- Handlers dédiés pour chaque transition d'état de la saga
+
+### Fiabilité
+- Rate limiting via KrakenD protège contre les abus
+- Timeout control évite les blocages
+- Isolation des pannes via l'architecture microservices
+- Patron Outbox garantit la persistence des événements même en cas de panne
+- OutboxProcessor automatise la récupération après redémarrage
+
+### Scalabilité
+- Microservices peuvent être mis à l'échelle indépendamment
+- KrakenD peut gérer la distribution de charge
+- Cluster distribué permet la mise à l'échelle horizontale avec ajout de nœuds ; cache Redis permet la mise à l'échelle de la lecture
+- Communication asynchrone permet une meilleure répartition de charge
+
+### Tolérance aux pannes
+- Événements sont persistés dans la table Outbox avant envoi à Kafka
+- Saga chorégraphiée peut continuer même si certains services sont temporairement indisponibles
+- OutboxProcessor retraite les opérations non complétées lors du redémarrage
+- Compensation automatique en cas d'erreur dans une étape de la saga
+
+### Haute disponibilité
+- Cluster distribué sans point de défaillance unique ; réplication automatique entre nœuds
+- Continuité de service en cas de panne d'un nœud du cluster
+- Consensus distribué garantit la cohérence des données même avec pannes partielles
 
 ## 11. Risques et dettes techniques
+Voici un résumé des risques et des dettes techniques liés à l'application de gestion de magasin. S'agissant d'une application pédagogique conçue pour explorer les concepts architecturaux, nous assumons ces risques, qui n'ont pas besoin d'être abordés lors des travaux pratiques.
 
 | Risque | Impact | Mitigation |
 |--------|---------|------------|
-| **Split-brain dans le cluster** | Incohérence des données si le cluster se divise | Utiliser un nombre impair de nœuds et configurer des quorums appropriés |
-| **Cohérence éventuelle** | Les lectures peuvent retourner des données légèrement obsolètes | Documenter le comportement et ajuster les niveaux de cohérence si nécessaire |
-| **SimpleStrategy en production** | Non adapté pour multi-datacenter | Migrer vers NetworkTopologyStrategy pour production |
+| **Cohérence du cache** | Les données de stock dans Redis peuvent devenir incohérentes avec la base de données | Implémenter des stratégies appropriées d'invalidation de cache |
+| **Sécurité des informations de stock** | Aucun de nos endpoints d'API n'est authentifié. Si cela peut ne pas poser de problème majeur si l'application est utilisée uniquement au sein du réseau d'un seul magasin, cela devient problématique dès que nous ouvrons certains endpoints, comme le point de terminaison GraphQL, à des utilisateurs externes. | Créez un système d'authentification pour le point de terminaison GraphQL, ou pour tous les endpoints pour plus de sécurité |
+| **Cohérence des stocks par rapport à la réalité** | Dans l'implémentation actuelle, il n'existe aucun contrôle des stocks maximum/minimum. Les stocks peuvent être négatifs, par exemple. | Implémenter des vérifications de limites de stock |
+| **Défaillance de l'event broker** | Si l'event broker Kafka cesse de fonctionner, la communication entre les services et l'exécution des sagas seront immédiatement compromises. | Utiliser un cluster Kafka avec plusieurs instances du broker, surveiller les instances et leur fournir les ressources informatiques nécessaires pour qu'elles fonctionnent toujours avec des performances élevées. |
+| **Cohérence des commandes en cas d'échec à un point spécifique de la saga** | Si le Store Manager s'arrête avant la création de l'enregistrement dans la table Outbox, la commande restera dans la base de données sans un `payment_id`. À moins que nous supprimions ou modifiions manuellement la commande, elle ne sera pas mise à jour. | Inclure les informations de la commande dans la table Outbox immédiatement après la création de la commande. |
+| **Synchronicité** | Certaines parties de notre saga chorographiée sont synchrones pour une question de simplicité. Cela signifie que nous ne tirons pas pleinement profit de l'approche event-driven. | Dans une implémentation de saga chorographiée réelle, tout serait asynchrone (ex. on diminue le stock et on demande le lien de paiement en même temps. Si une des opérations échoue, on annule l'autre, et vice-versa) |
+| **Latence du consensus distribué** | La synchronisation entre nœuds du cluster distribué peut ajouter de la latence aux écritures critiques. | Documenter le trade-off entre cohérence et performance ; accepter une cohérence éventuelle si approprié |
+| **Gestion de concurrence en base distribuée** | Les modifications concurrentes sur les mêmes données (ex: stock) peuvent causer des conditions de course même dans une base distribuée. | Implémenter des stratégies de verrouillage appropriées (pessimiste ou optimiste) selon le cas d'usage |
+
 
 ## 12. Glossaire
 
 | Terme | Définition |
 |-------|------------|
-| **API** | Application Programming Interface |
-| **CQL** | Cassandra Query Language, langage de requête similaire à SQL |
-| **DAO** | Data Access Object, patron de conception pour abstraire l'accès aux données |
+| **API** | Application Programming Interface : interface de programmation d'applications |
+| **CQRS** | Command Query Responsibility Segregation : patron séparant les opérations d'écriture (Commands) des opérations de lecture (Queries) |
+| **GraphQL** | Langage de requête pour API permettant aux clients de demander des données spécifiques |
+| **REST** | Representational State Transfer: style architectural pour les services web |
+| **RESTful** | APIs qui adhèrent aux principes REST |
+| **Consensus distribué** | Algorithme garantissant qu'un ensemble de nœuds se mettent d'accord sur l'état des données (ex: Raft, Paxos) |

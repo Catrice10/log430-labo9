@@ -19,6 +19,4 @@ package Models {
 [OrderItem] --> [Order] 
 [OrderItem] --> [Product] 
 [Order] --> [User] 
-
-
 @enduml
