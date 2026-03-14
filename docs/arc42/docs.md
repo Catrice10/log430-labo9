@@ -11,7 +11,7 @@ L'application « Store Manager » est un système à architecture microservices 
 - La persistance distribuée avec une base de données (YugabyteDB/CockroachDB)
 - La comparaison des approches REST vs GraphQL
 - L'optimisation des jointures SQL avec SQLAlchemy
-- L'utilisation d'un API Gateway (KrakenD) pour le contrôle de timeout et rate limiting
+- L'utilisation d'une API Gateway (KrakenD) pour le contrôle de timeout et rate limiting
 - L'utilisation d'un broker Kafka pour la communication asynchrone avec des microservices
 - La transition vers une architecture microservices avec séparation des responsabilités
 - L'implémentation de Sagas chorégraphiées pour la coordination distribuée des opérations
@@ -26,7 +26,7 @@ Nous avons développé ce projet tout au long du cours LOG430, et le Lab 09 marq
 | 1 | **Extensibilité** | Ajout facile de nouveaux endpoints API et clients grâce aux principes REST |
 | 2 | **Flexibilité** | Le support GraphQL permet aux clients de requêter exactement les données nécessaires |
 | 3 | **Performance** | Cache Redis pour les données de stock et optimisation des jointures SQL |
-| 4 | **Maintenabilité** | Séparation claire des responsabilités via les patrons MVC+CQRS et l’architecture microservices |
+| 4 | **Maintenabilité** | Séparation claire des responsabilités via les patrons MVC+CQRS et l'architecture microservices |
 | 5 | **Fiabilité** | Rate limiting et timeout via KrakenD pour protéger les services backend ; Saga chorégraphiée avec Outbox Pattern pour garantir la cohérence des transactions distribuées |
 | 6 | **Scalabilité** | Architecture microservices permet la mise à l'échelle indépendante des services ; Kafka permet une communication asynchrone découplée ; base de données distribuée permet la mise à l'échelle horizontale |
 | 7 | **Tolérance aux pannes** | Patron Outbox et architecture event-driven permettent la récupération des opérations après redémarrage des services ; réplication automatique en base de données distribuée |
@@ -34,8 +34,8 @@ Nous avons développé ce projet tout au long du cours LOG430, et le Lab 09 marq
 
 ### Parties prenantes (Stakeholders)
 - **Développeuses et développeurs** : Apprendre/enseigner l'architecture API REST, GraphQL, microservices et les patrons de services web modernes
-- **Employé·es du magasin** : Utilisateur·trices gérant les articles, commandes et stock via l'API
-- **Client·es du magasin** : Utilisateur·trices finales servis par l'application (indirectement via les interactions avec les employé·es)
+- **Employé·es du magasin** : Utilisateurs·trices gérant les articles, commandes et stock via l'API
+- **Client·es du magasin** : Utilisateurs·trices finales servies par l'application (indirectement via les interactions avec les employé·es)
 - **Fournisseurs** : Partenaires externes utilisant l'endpoint GraphQL pour vérifier l'état du stock et envoyer des données de réapprovisionnement
 
 ## 2. Contraintes d'architecture
@@ -92,28 +92,49 @@ Le système permet aux employé·es du magasin de :
 ![Component](component.png)
 
 ### Composants clés:
-Dans le labo 9 nous utilisons une version simplifiée du Store Manager qui comporte donc moins de fonctionnalités clés. Cependant, ces mêmes fonctionnalités seraient disponibles dans la version complète.
+Dans le labo 9 nous utilisons une version simplifiée du Store Manager qui comporte :
 - **Contrôleurs API** : Gèrent les requêtes et réponses HTTP
 - **Couche logique métier** : Traitement des commandes, gestion de stock
 - **Models avec SQLAlchemy** : Abstraction de l'accès aux bases de données
 
+Cependant, voici les composants dans la version complète du Store Manager :
+- **Cache Redis** : Mise en cache des données de stock pour la performance
+- **Schéma GraphQL** : Interface de requête flexible pour les fournisseurs
+- **Kafka Producer** : Producteur d'événements qui envoie les messages à Kafka pour notification des microservices
+- **Kafka Consumer** : Consommateur d'événements qui réagit aux messages publiés sur les topics Kafka
+- **Event Handlers** : Réagissent aux événements Kafka et exécutent les opérations métier ou les compensations
+- **Outbox Table** : Stocke les événements à envoyer pour assurer la tolérance aux pannes
+- **OutboxProcessor** : Lit la table Outbox et relance l'envoi des événements après redémarrage
+- **HandlerRegistry** : Registre centralisé mappant les types d'événements à leurs handlers correspondants
+
 ## 6. Vue d'exécution
 ![Use Case](use_case.png)
 
-Dans le labo 9 nous utilisons une version simplifiée du Store Manager qui comporte donc moins de fonctionnalités clés. Cependant, ces mêmes fonctionnalités seraient disponibles dans la version complète.
+Dans le labo 9 nous utilisons une version simplifiée du Store Manager qui comporte :
 - **Traitement des commandes** : Traitement des commandes, gestion de stock
-- **Consensus** : les noeuds des  bases de données distribué parlent entre eux pour decider qui va faire des changements des donnés. C'est necessaire pour eviter des incoherences.
-- **Récupération après panne** : les noeuds actifs des bases de données distribué dans le cluster peuvent assumer des responsabilités des noeuds inactifs s'il y a besoin.
+
+Les bases de données distribuées comportent :
+- **Consensus** : les nœuds des bases de données distribuées parlent entre eux pour décider qui va faire des changements de données. C'est nécessaire pour éviter des incohérences.
+- **Récupération après panne** : les nœuds actifs des bases de données distribuées dans le cluster peuvent assumer les responsabilités des nœuds inactifs s'il y a besoin.
+
+Cependant, voici les fonctionnalités dans la version complète du Store Manager :
+- **Compensation automatique** : En cas d'erreur, les handlers déclenchent les événements de compensation (ex: StockIncreased)
+- **Rapports de stock** : Génération de rapports de stock complets avec détails des articles
+- **Requêtes GraphQL** : Fournisseurs interrogent des champs de données de stock spécifiques
+- **Réapprovisionnement de stock** : Ajout de quantités de stock aux articles existants
+- **Récupération après panne** : OutboxProcessor redémarre les opérations non complétées après redémarrage du service
 
 ## 7. Vue de déploiement
 ![Deployment](deployment.png)
 
-### Architecture conteneurs :
-- **Conteneur API et bases de données** : Application Flask, bases de données YugabyteDB/CockroachDB, Redis.
-- **Conteneur Payment Service** : API Flask dédiée aux [paiements](https://github.com/guteacher/log430-a25-labo5-payment)
-- **KrakenD** : API Gateway
+Dans le labo 9 nous utilisons une version simplifiée du Store Manager qui comporte :
+- **Conteneur API et bases de données** : Application Flask, bases de données YugabyteDB/CockroachDB
 - **Réseau Docker** : Permet la communication entre conteneurs
 
+Cependant, voici les fonctionnalités dans la version complète du Store Manager :
+- **Bases de données cache** : Redis.
+- **Conteneur Payment Service** : API Flask dédiée aux [paiements](https://github.com/guteacher/log430-a25-labo5-payment)
+- **KrakenD** : API Gateway
 
 ## 8. Concepts transversaux
 - **Principes REST** : Client-serveur, sans état, interface uniforme, système en couches
@@ -153,7 +174,7 @@ Veuillez consulter le fichier `/docs/adr/adr001.md`.
 - Communication asynchrone via Kafka réduit le couplage entre services
 
 ### Maintenabilité
-- Séparation claire des préoccupations avec les patrons MVC+CQRS
+- Séparation claire des responsabilités avec les patrons MVC+CQRS
 - Conventions de nommage cohérentes à travers toutes les couches
 - Conteneurisation Docker pour des environnements cohérents
 - Microservices permettent des déploiements indépendants
@@ -193,7 +214,7 @@ Voici un résumé des risques et des dettes techniques liés à l'application de
 | **Cohérence des stocks par rapport à la réalité** | Dans l'implémentation actuelle, il n'existe aucun contrôle des stocks maximum/minimum. Les stocks peuvent être négatifs, par exemple. | Implémenter des vérifications de limites de stock |
 | **Défaillance de l'event broker** | Si l'event broker Kafka cesse de fonctionner, la communication entre les services et l'exécution des sagas seront immédiatement compromises. | Utiliser un cluster Kafka avec plusieurs instances du broker, surveiller les instances et leur fournir les ressources informatiques nécessaires pour qu'elles fonctionnent toujours avec des performances élevées. |
 | **Cohérence des commandes en cas d'échec à un point spécifique de la saga** | Si le Store Manager s'arrête avant la création de l'enregistrement dans la table Outbox, la commande restera dans la base de données sans un `payment_id`. À moins que nous supprimions ou modifiions manuellement la commande, elle ne sera pas mise à jour. | Inclure les informations de la commande dans la table Outbox immédiatement après la création de la commande. |
-| **Synchronicité** | Certaines parties de notre saga chorographiée sont synchrones pour une question de simplicité. Cela signifie que nous ne tirons pas pleinement profit de l'approche event-driven. | Dans une implémentation de saga chorographiée réelle, tout serait asynchrone (ex. on diminue le stock et on demande le lien de paiement en même temps. Si une des opérations échoue, on annule l'autre, et vice-versa) |
+| **Synchronicité** | Certaines parties de notre saga chorégraphiée sont synchrones pour une question de simplicité. Cela signifie que nous ne tirons pas pleinement profit de l'approche event-driven. | Dans une implémentation de saga chorégraphiée réelle, tout serait asynchrone (ex. on diminue le stock et on demande le lien de paiement en même temps. Si une des opérations échoue, on annule l'autre, et vice-versa) |
 | **Latence du consensus distribué** | La synchronisation entre nœuds du cluster distribué peut ajouter de la latence aux écritures critiques. | Documenter le trade-off entre cohérence et performance ; accepter une cohérence éventuelle si approprié |
 | **Gestion de concurrence en base distribuée** | Les modifications concurrentes sur les mêmes données (ex: stock) peuvent causer des conditions de course même dans une base distribuée. | Implémenter des stratégies de verrouillage appropriées (pessimiste ou optimiste) selon le cas d'usage |
 
