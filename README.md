@@ -84,7 +84,7 @@ Répétez la vérification. Vous devriez maintenant voir de nouveaux enregistrem
 ysqlsh -h yugabyte1 -U yugabyte -c "SELECT * FROM orders;"
 ```
 
-> 💡 **Question 1** : Quelle est la sortie du terminal que vous obtenez? Si vous répétez cette commande sur `yugabyte2` et `yugabyte3`, est-ce que la sortie est identique? Illustrez votre réponse avec des captures d'écran du terminal.
+> 💡 **Question 1** : Quelle est la sortie du terminal que vous obtenez? Si vous répétez cette commande sur `yugabyte2` et `yugabyte3`, est-ce que la sortie est identique? Illustrez votre réponse avec des captures d'écran ou des sorties du terminal.
 
 ### 2. Comparez le verrouillage pessimiste vs. optimiste
 
@@ -153,7 +153,7 @@ docker stop yugabyte2
 docker start yugabyte2
 ```
 
-> 💡 **Question 5** : Est-ce que le taux d'erreur a augmenté lors de l'arrêt du nœud? Combien de temps a duré le basculement? Illustrez votre réponse avec des captures d'écran des graphiques sur Locust.
+> 💡 **Question 5** : Est-ce que le taux d'erreur a augmenté lors de l'arrêt du nœud? Combien de temps a duré le basculement (approximativement)? Illustrez votre réponse avec des captures d'écran et statistiques de l'interface Locust.
 
 ### 5. Testez la charge sur CockroachDB avec Locust
 Démarrez le projet dans le répertoire `cockroach-db`. Assurez-vous que les étapes de setup ont été exécutées avant le démarrage. Vous devriez voir les conteneurs `cockroach1`, `cockroach2` et `cockroach3` dans la liste. Si vous voulez, vous pouvez arrêter vos conteneurs YugabyteDB pour économiser les ressources.
@@ -164,7 +164,12 @@ Ensuite, répétez le test de charge sur CockroachDB avec les mêmes paramètres
 
 > 💡 **Question 7** : Quelle base de données affiche le plus bas taux d'erreurs et la plus baisse latence? Est-ce que c'est YugabyteDB ou CockroachDB? Illustrez votre réponse avec des captures d'écran ou statistiques de l'interface Locust.
 
+### 6. Préparez l'environnement de production
+
+Choisissez l'une des bases de données présentées dans ce labo et déployez-la sur une VM. Veuillez décrire la procédure dans votre rapport. Créez un fichier CI pour éxécuter le test `concurrency_test.py` avant le déploiement. Si possible, utilisez un GitHub Runner pour automatiser le processus (veuillez consulter le labo 0 pour les instructions).
+
+
 ## 📦 Livrables
 
-- Un fichier `.zip` contenant l'intégralité du code source du projet Labo 09.
+- Un fichier `.zip` contenant l'intégralité du code source du projet Labo 09 (incluant les fichiers CI et le test).
 - Un rapport en `.pdf` répondant aux questions présentées dans ce document. Il est obligatoire d'illustrer vos réponses avec du code ou des captures d'écran/terminal.

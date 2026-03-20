@@ -53,7 +53,7 @@ def create_order_pessimistic(
             stock = (
                 session.query(Stock)
                 .filter(Stock.product_id == pid)
-                .with_for_update()          # <-- pessimistic lock
+                .with_for_update()
                 .one_or_none()
             )
             if stock is None:
