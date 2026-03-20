@@ -52,6 +52,8 @@ Démarrez premièrement le projet dans le répertoire `yugabyte-db`. Suivez les 
 
 L'architecture de ce laboratoire repose sur un cluster (grappe) à trois nœuds. Dans le cas de YugabyteDB, les conteneurs s'appelent `yugabyte1`, `yugabyte2`, `yugabyte3`. Contrairement à une base de données classique centralisée, YugabyteDB distribue automatiquement les données et les transactions entre les nœuds. Cependant, il utilise encore le paradigme relationnel, donc il nous permet de créer des tables, des colonnes, et d'utiliser le langage SQL pour consulter la base de données.
 
+Pour en savoir plus sur l'architecture et les décisions de conception, veuillez consulter le document d'architecture sur `/docs/arc42/docs.md` et l'ADR sur `/docs/adr/adr001.md` avant de commencer les activités.
+
 > 📝 **NOTE** : Dans une vraie application en environnement de production, les nœuds d'un cluster seraient déployés sur des serveurs physiques distincts. Par simplicité, dans ce labo, les trois nœuds tournent tous dans des conteneurs Docker sur la même machine.
 
 ### 1. Observez le schéma et le cluster YugabyteDB

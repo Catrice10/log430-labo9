@@ -79,6 +79,7 @@ Le système permet aux employé·es du magasin de :
 | **Requêtes de données flexibles** | Endpoint GraphQL pour les clients nécessitant des champs de données spécifiques |
 | **Gestion de stock** | Mises à jour automatiques du stock lors de création/suppression de commandes |
 | **Performance** | Cache Redis pour les données de stock fréquemment accédées |
+| **Faible empreinte mémoire** | [YugabyteDB](https://docs.yugabyte.com/stable/deploy/checklist/#cpu-and-ram) et [CockroachDB](https://www.cockroachlabs.com/docs/stable/recommended-production-settings#node-density-testing-configuration) nécessitent moins de CPU et de RAM pour une configuration de base que d'autres bases de données distribuées, comme [Apache Cassandra](https://cassandra.apache.org/doc/latest/cassandra/managing/operating/hardware.html#memory) |
 | **Support multi-BD** | Cluster distribué pour la persistance ; Redis pour le cache des rapports |
 | **Protection des services** | KrakenD API Gateway pour rate limiting et timeout |
 | **Séparation des responsabilités** | Microservice dédié pour la gestion des commandes ; Kafka comme event broker |
