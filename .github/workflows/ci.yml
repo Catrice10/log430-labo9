@@ -1,0 +1,52 @@
+name: CI - Test & Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env file
+        working-directory: cockroach-db
+        run: cp .env.example .env
+
+      - name: Create Docker network
+        run: docker network create labo09-network
+
+      - name: Start CockroachDB cluster
+        working-directory: cockroach-db
+        run: docker compose up -d
+
+      - name: Wait for services to be ready
+        working-directory: cockroach-db
+        run: |
+          echo "Waiting for CockroachDB to be healthy..."
+          timeout 120 bash -c 'until docker inspect --format="{{.State.Health.Status}}" cockroach1 2>/dev/null | grep -q "healthy"; do sleep 5; done'
+          echo "Waiting for db-init to complete..."
+          timeout 120 bash -c 'until docker inspect --format="{{.State.Status}}" db_init_2 2>/dev/null | grep -q "exited"; do sleep 5; done'
+          echo "Waiting for python app..."
+          timeout 60 bash -c 'until curl -s http://localhost:5000/stocks > /dev/null 2>&1; do sleep 3; done'
+          echo "App is ready!"
+
+      - name: Run concurrency test
+        working-directory: cockroach-db
+        run: docker exec python_app_2 python tests/concurrency_test.py --threads 20 --product 3
+
+      - name: Verify stock is zero
+        run: |
+          STOCK=$(curl -s http://localhost:5000/stocks | python3 -c "import sys,json; data=json.load(sys.stdin); print([s['quantity'] for s in data if s['product_id']==3][0])")
+          echo "Stock for product 3: $STOCK"
+          if [ "$STOCK" -ne 0 ]; then echo "ERROR: Stock should be 0"; exit 1; fi
+
+      - name: Cleanup
+        if: always()
+        working-directory: cockroach-db
+        run: docker compose down -v
