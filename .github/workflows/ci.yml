@@ -33,7 +33,7 @@ jobs:
           echo "Waiting for db-init to complete..."
           timeout 120 bash -c 'until docker inspect --format="{{.State.Status}}" db_init_2 2>/dev/null | grep -q "exited"; do sleep 5; done'
           echo "Waiting for python app..."
-          timeout 60 bash -c 'until curl -s http://localhost:5000/stocks > /dev/null 2>&1; do sleep 3; done'
+          timeout 60 bash -c 'until curl -s http://localhost:5001/stocks > /dev/null 2>&1; do sleep 3; done'
           echo "App is ready!"
 
       - name: Run concurrency test
@@ -42,7 +42,7 @@ jobs:
 
       - name: Verify stock is zero
         run: |
-          STOCK=$(curl -s http://localhost:5000/stocks | python3 -c "import sys,json; data=json.load(sys.stdin); print([s['quantity'] for s in data if s['product_id']==3][0])")
+          STOCK=$(curl -s http://localhost:5001/stocks | python3 -c "import sys,json; data=json.load(sys.stdin); print([s['quantity'] for s in data if s['product_id']==3][0])")
           echo "Stock for product 3: $STOCK"
           if [ "$STOCK" -ne 0 ]; then echo "ERROR: Stock should be 0"; exit 1; fi
 
