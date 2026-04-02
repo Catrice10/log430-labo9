@@ -5,7 +5,7 @@ services:
     command: >
       bash -c "/home/yugabyte/bin/yugabyted start --advertise_address=yugabyte1 --tserver_flags=ysql_enable_auth=false --daemon=false --base_dir=/home/yugabyte/var"
     ports:
-      - "7000:7000"   # yb-master UI
+      - "7001:7000"   # yb-master UI
       - "9000:9000"   # yb-tserver UI
       - "5433:5433"   # YSQL
       - "9042:9042"   # YCQL
@@ -69,7 +69,7 @@ services:
       db-init:
         condition: service_completed_successfully
     ports:
-      - "5000:5000"
+      - "5001:5000"
     env_file:
       - .env
     networks:
